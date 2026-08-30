@@ -19,7 +19,15 @@ onMounted(() => {
 })
 
 const moveToCart = (item) => {
-  cartStore.addToCart(item, 1)
+  // Wishlist items don't carry `stock` (see stores/wishlist.js mapRow) —
+  // cartStore.addToCart needs it to compute quantity, so look up the
+  // full product from the products store first, same as ProductCard.vue
+  // and ProductView.vue already do.
+  const product = productsStore.getById(item.id)
+
+  if (!product) return
+
+  cartStore.addToCart(product, 1)
 
   wishlistStore.removeFromWishlist(item.id)
 }

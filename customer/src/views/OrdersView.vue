@@ -1,11 +1,13 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { Package, ShoppingBag, ArrowRight, Loader2 } from 'lucide-vue-next'
+import { useRoute } from 'vue-router'
+import { Package, ShoppingBag, ArrowRight, Loader2, AlertTriangle } from 'lucide-vue-next'
 
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
+const route = useRoute()
 const orders = ref([])
 const isLoading = ref(true)
 
@@ -39,6 +41,18 @@ onMounted(async () => {
       <h1 class="text-4xl font-bold">My Orders</h1>
 
       <p class="text-gray-500 mt-2">View your previous VueShop orders.</p>
+    </div>
+
+    <div
+      v-if="route.query.paymentIssue"
+      class="mb-8 flex items-start gap-3 bg-amber-50 text-amber-700 p-4 rounded-lg"
+    >
+      <AlertTriangle class="w-5 h-5 mt-0.5 flex-shrink-0" />
+      <p class="text-sm">
+        Order <strong>{{ route.query.paymentIssue }}</strong> was placed, but online payment couldn't be
+        started. It's saved as unpaid — cash on delivery works normally, or contact us to complete payment
+        another way.
+      </p>
     </div>
 
     <!-- Empty -->

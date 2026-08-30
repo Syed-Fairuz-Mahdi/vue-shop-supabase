@@ -131,7 +131,7 @@ const placeOrder = async () => {
   |--------------------------------------------------------------------------
   */
 
-  const { data, error } = await supabase.functions.invoke('create-order', {
+  let { data, error } = await supabase.functions.invoke('create-order', {
     body: {
       paymentMethod: paymentMethod.value,
       items: cartStore.items.map((item) => ({ productId: item.id, quantity: item.quantity })),
@@ -149,7 +149,37 @@ const placeOrder = async () => {
 
   isProcessing.value = false
 
+  // supabase-js hides the real response body behind a generic
+  // "Edge Function returned a non-2xx status code" message whenever
+  // create-order responds with an error status — the actual JSON
+  // (with the real error, and sometimes the order that WAS created
+  // before payment failed) lives on error.context, so unwrap it here
+  // rather than showing the generic message.
+  if (error && error.context) {
+    try {
+      data = await error.context.json()
+    } catch {
+      // context wasn't JSON — fall through to the generic message below.
+    }
+  }
+
   if (error || data?.error) {
+    // The order can exist even though this call "failed" — e.g. stock
+    // was reserved and the order row was written, but starting the
+    // SSLCommerz session then failed (missing/invalid credentials,
+    // SSLCommerz being down, etc). If we just showed an error and let
+    // the customer click "Place Order" again, it would create a SECOND
+    // order for the same items — so if an order was created, treat this
+    // as "created, payment needs to be retried" instead of a hard failure.
+    if (data?.order) {
+      cartStore.items.splice(0)
+      router.push({
+        path: '/orders',
+        query: { paymentIssue: data.order.order_number },
+      })
+      return
+    }
+
     errorMessage.value = data?.error || error?.message || 'Could not place your order. Please try again.'
     return
   }
