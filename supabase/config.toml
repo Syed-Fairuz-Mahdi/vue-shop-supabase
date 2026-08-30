@@ -1,0 +1,15 @@
+# Local/project-level Supabase config. Most of this is only relevant
+# if you use `supabase start` locally — for a hosted project, the
+# [functions.*] verify_jwt settings below are what matter: apply them
+# with `supabase functions deploy <name> --no-verify-jwt` for the two
+# functions listed here, since SSLCommerz calls them directly and can't
+# supply a Supabase user session token.
+
+[functions.create-order]
+verify_jwt = true
+
+[functions.sslcommerz-ipn]
+verify_jwt = false
+
+[functions.sslcommerz-callback]
+verify_jwt = false

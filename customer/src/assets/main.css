@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+:root {
+  --app-font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  @apply bg-gray-100;
+  font-family: var(--app-font-family);
+}
