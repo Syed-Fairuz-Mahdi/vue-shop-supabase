@@ -13,6 +13,8 @@ import AdminCustomersView from '@/views/AdminCustomersView.vue'
 import AdminReviewsView from '@/views/AdminReviewsView.vue'
 import AdminSettingsView from '@/views/AdminSettingsView.vue'
 import AdminDesignView from '@/views/AdminDesignView.vue'
+import AdminTeamView from '@/views/AdminTeamView.vue'
+import SetPasswordView from '@/views/SetPasswordView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,6 +24,18 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: AdminLoginView,
+    },
+
+    // Landed on from an invite email. Not gated by requiresAdmin —
+    // this page's only job is letting an already-authenticated (via
+    // the invite link's token) account set a password. Their
+    // profiles.role is already 'admin' by the time the email was
+    // sent (see the invite-admin Edge Function), so once they've set
+    // a password they land in the normal admin area like anyone else.
+    {
+      path: '/set-password',
+      name: 'set-password',
+      component: SetPasswordView,
     },
 
     {
@@ -40,6 +54,7 @@ const router = createRouter({
         { path: 'reviews', name: 'reviews', component: AdminReviewsView },
         { path: 'settings', name: 'settings', component: AdminSettingsView },
         { path: 'design', name: 'design', component: AdminDesignView },
+        { path: 'team', name: 'team', component: AdminTeamView },
       ],
     },
   ],

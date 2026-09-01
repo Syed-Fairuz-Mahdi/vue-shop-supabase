@@ -8,6 +8,9 @@
 [functions.create-order]
 verify_jwt = true
 
+[functions.invite-admin]
+verify_jwt = true
+
 [functions.sslcommerz-ipn]
 verify_jwt = false
 

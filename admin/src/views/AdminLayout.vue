@@ -14,6 +14,7 @@ import {
   ExternalLink,
   ShoppingBag,
   Users,
+  ShieldCheck,
 } from 'lucide-vue-next'
 
 import { useAdminAuthStore } from '@/stores/adminAuth'
@@ -34,6 +35,7 @@ const navItems = [
   { to: '/reviews', label: 'Reviews', icon: Star },
   { to: '/settings', label: 'Site Settings', icon: Settings },
   { to: '/design', label: 'Design', icon: Palette },
+  { to: '/team', label: 'Team & Admin Access', icon: ShieldCheck },
 ]
 
 // Points back at the customer storefront. Set VITE_CUSTOMER_SITE_URL
