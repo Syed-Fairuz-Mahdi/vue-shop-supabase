@@ -36,6 +36,337 @@ index da0d438..f6b72e1 100644
      "preview": "vite preview"
    },
    "dependencies": {
+diff --git a/admin/src/router/index.js b/admin/src/router/index.js
+index 45bde52..5cb2678 100644
+--- a/admin/src/router/index.js
++++ b/admin/src/router/index.js
+@@ -13,6 +13,8 @@ import AdminCustomersView from '@/views/AdminCustomersView.vue'
+ import AdminReviewsView from '@/views/AdminReviewsView.vue'
+ import AdminSettingsView from '@/views/AdminSettingsView.vue'
+ import AdminDesignView from '@/views/AdminDesignView.vue'
++import AdminTeamView from '@/views/AdminTeamView.vue'
++import SetPasswordView from '@/views/SetPasswordView.vue'
+ 
+ const router = createRouter({
+   history: createWebHistory(import.meta.env.BASE_URL),
+@@ -24,6 +26,18 @@ const router = createRouter({
+       component: AdminLoginView,
+     },
+ 
++    // Landed on from an invite email. Not gated by requiresAdmin —
++    // this page's only job is letting an already-authenticated (via
++    // the invite link's token) account set a password. Their
++    // profiles.role is already 'admin' by the time the email was
++    // sent (see the invite-admin Edge Function), so once they've set
++    // a password they land in the normal admin area like anyone else.
++    {
++      path: '/set-password',
++      name: 'set-password',
++      component: SetPasswordView,
++    },
++
+     {
+       path: '/',
+       component: AdminLayout,
+@@ -40,6 +54,7 @@ const router = createRouter({
+         { path: 'reviews', name: 'reviews', component: AdminReviewsView },
+         { path: 'settings', name: 'settings', component: AdminSettingsView },
+         { path: 'design', name: 'design', component: AdminDesignView },
++        { path: 'team', name: 'team', component: AdminTeamView },
+       ],
+     },
+   ],
+diff --git a/admin/src/views/AdminLayout.vue b/admin/src/views/AdminLayout.vue
+index 2d9b1ad..5b5b8ce 100644
+--- a/admin/src/views/AdminLayout.vue
++++ b/admin/src/views/AdminLayout.vue
+@@ -14,6 +14,7 @@ import {
+   ExternalLink,
+   ShoppingBag,
+   Users,
++  ShieldCheck,
+ } from 'lucide-vue-next'
+ 
+ import { useAdminAuthStore } from '@/stores/adminAuth'
+@@ -34,6 +35,7 @@ const navItems = [
+   { to: '/reviews', label: 'Reviews', icon: Star },
+   { to: '/settings', label: 'Site Settings', icon: Settings },
+   { to: '/design', label: 'Design', icon: Palette },
++  { to: '/team', label: 'Team & Admin Access', icon: ShieldCheck },
+ ]
+ 
+ // Points back at the customer storefront. Set VITE_CUSTOMER_SITE_URL
+diff --git a/admin/src/views/AdminTeamView.vue b/admin/src/views/AdminTeamView.vue
+new file mode 100644
+index 0000000..f5845ea
+--- /dev/null
++++ b/admin/src/views/AdminTeamView.vue
+@@ -0,0 +1,158 @@
++<script setup>
++import { onMounted, ref } from 'vue'
++import { UserPlus, Loader2, ShieldCheck, Mail, CheckCircle2, AlertTriangle } from 'lucide-vue-next'
++
++import { supabase } from '@/lib/supabase'
++
++const email = ref('')
++const isSending = ref(false)
++const resultMessage = ref('')
++const resultKind = ref('') // 'success' | 'error'
++
++const invites = ref([])
++const isLoadingInvites = ref(true)
++
++// admin_invites is readable by any admin under RLS (admin_invites_select_admin).
++// This is purely a history log — it never decides who is actually an
++// admin; profiles.role is the only thing that does that.
++const loadInvites = async () => {
++  isLoadingInvites.value = true
++
++  const { data } = await supabase
++    .from('admin_invites')
++    .select('id, email, kind, created_at, invited_by:profiles!admin_invites_invited_by_fkey(email)')
++    .order('created_at', { ascending: false })
++
++  invites.value = data || []
++  isLoadingInvites.value = false
++}
++
++onMounted(loadInvites)
++
++const sendInvite = async () => {
++  resultMessage.value = ''
++  resultKind.value = ''
++
++  const trimmed = email.value.trim()
++  if (!trimmed) return
++
++  isSending.value = true
++
++  try {
++    const { data, error } = await supabase.functions.invoke('invite-admin', {
++      body: { email: trimmed },
++    })
++
++    // supabase.functions.invoke() only rejects on network failure —
++    // a non-2xx response (our validation/auth errors) still lands here
++    // as `error`, with the JSON body typically available on error.context.
++    if (error) {
++      let message = 'Something went wrong sending the invite.'
++      try {
++        const body = await error.context.json()
++        message = body.error || message
++      } catch {
++        // fall back to the generic message above
++      }
++      resultKind.value = 'error'
++      resultMessage.value = message
++      return
++    }
++
++    resultKind.value = 'success'
++    resultMessage.value = data.message
++    email.value = ''
++    await loadInvites()
++  } catch {
++    resultKind.value = 'error'
++    resultMessage.value = 'Something went wrong sending the invite. Please try again.'
++  } finally {
++    isSending.value = false
++  }
++}
++</script>
++
++<template>
++  <div>
++    <div class="mb-8">
++      <h1 class="text-3xl font-bold">Team &amp; Admin Access</h1>
++      <p class="text-gray-500 mt-2">Grant admin access to someone else, directly from here.</p>
++    </div>
++
++    <!-- Invite form -->
++    <div class="bg-white rounded-2xl shadow p-6 mb-8 max-w-xl">
++      <h2 class="font-bold text-lg mb-1">Grant admin access</h2>
++      <p class="text-sm text-gray-500 mb-4">
++        If the email already has an account, it's promoted immediately. If it's new, they'll get an email to
++        set a password — they'll already have admin access once they do.
++      </p>
++
++      <form class="flex flex-col sm:flex-row gap-3" @submit.prevent="sendInvite">
++        <input
++          v-model="email"
++          type="email"
++          required
++          placeholder="teammate@example.com"
++          class="flex-1 border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
++        />
++
++        <button
++          type="submit"
++          :disabled="isSending"
++          class="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition disabled:opacity-60"
++        >
++          <Loader2 v-if="isSending" class="w-4 h-4 animate-spin" />
++          <UserPlus v-else class="w-4 h-4" />
++          Grant Access
++        </button>
++      </form>
++
++      <p
++        v-if="resultMessage"
++        class="mt-4 flex items-start gap-2 text-sm"
++        :class="resultKind === 'success' ? 'text-green-700' : 'text-red-600'"
++      >
++        <CheckCircle2 v-if="resultKind === 'success'" class="w-4 h-4 mt-0.5 flex-shrink-0" />
++        <AlertTriangle v-else class="w-4 h-4 mt-0.5 flex-shrink-0" />
++        {{ resultMessage }}
++      </p>
++    </div>
++
++    <!-- History -->
++    <div class="bg-white rounded-2xl shadow p-6">
++      <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
++        <ShieldCheck class="w-5 h-5 text-blue-600" />
++        Admin access history
++      </h2>
++
++      <div v-if="isLoadingInvites" class="text-center py-10">
++        <Loader2 class="w-8 h-8 mx-auto text-blue-600 animate-spin" />
++      </div>
++
++      <div v-else-if="invites.length === 0" class="text-center py-10 text-gray-500">
++        <Mail class="w-10 h-10 mx-auto text-gray-300 mb-2" />
++        No admin access has been granted yet.
++      </div>
++
++      <div v-else class="divide-y">
++        <div
++          v-for="invite in invites"
++          :key="invite.id"
++          class="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1"
++        >
++          <div>
++            <p class="font-medium">{{ invite.email }}</p>
++            <p class="text-xs text-gray-500">
++              {{ invite.kind === 'invited' ? 'Invited as a new account' : 'Existing account promoted' }}
++              by {{ invite.invited_by?.email || 'unknown' }}
++            </p>
++          </div>
++
++          <p class="text-sm text-gray-400 whitespace-nowrap">
++            {{ new Date(invite.created_at).toLocaleString() }}
++          </p>
++        </div>
++      </div>
++    </div>
++  </div>
++</template>
+diff --git a/admin/src/views/SetPasswordView.vue b/admin/src/views/SetPasswordView.vue
+new file mode 100644
+index 0000000..0d65843
+--- /dev/null
++++ b/admin/src/views/SetPasswordView.vue
+@@ -0,0 +1,101 @@
++<script setup>
++import { ref } from 'vue'
++import { useRouter } from 'vue-router'
++import { KeyRound, Loader2, AlertTriangle } from 'lucide-vue-next'
++
++import { supabase } from '@/lib/supabase'
++
++const router = useRouter()
++
++const password = ref('')
++const confirmPassword = ref('')
++const isSubmitting = ref(false)
++const errorMessage = ref('')
++
++// By the time this page mounts, supabase-js has already picked up the
++// access token from the invite link's URL fragment (detectSessionInUrl:
++// true in lib/supabase.js) and established a session for this account.
++// This form's only job is to give that already-authenticated user a
++// password, via the standard (non-admin) updateUser call — it never
++// touches profiles.role. That was already set to 'admin' server-side
++// by the invite-admin Edge Function, before the email was even sent.
++const submit = async () => {
++  errorMessage.value = ''
++
++  if (password.value.length < 8) {
++    errorMessage.value = 'Password must be at least 8 characters.'
++    return
++  }
++
++  if (password.value !== confirmPassword.value) {
++    errorMessage.value = 'Passwords do not match.'
++    return
++  }
++
++  isSubmitting.value = true
++
++  const { error } = await supabase.auth.updateUser({ password: password.value })
++
++  isSubmitting.value = false
++
++  if (error) {
++    errorMessage.value = error.message || 'Could not set your password. The invite link may have expired.'
++    return
++  }
++
++  router.push('/')
++}
++</script>
++
++<template>
++  <div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
++    <div class="bg-white rounded-2xl shadow p-8 w-full max-w-md">
++      <div class="flex items-center gap-2 mb-2">
++        <KeyRound class="w-6 h-6 text-blue-600" />
++        <h1 class="text-2xl font-bold">Set your password</h1>
++      </div>
++
++      <p class="text-gray-500 text-sm mb-6">
++        You've been granted admin access to VueShop. Choose a password to finish setting up your account.
++      </p>
++
++      <form class="space-y-4" @submit.prevent="submit">
++        <div>
++          <label class="block text-sm font-medium mb-1">New password</label>
++          <input
++            v-model="password"
++            type="password"
++            required
++            minlength="8"
++            class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
++          />
++        </div>
++
++        <div>
++          <label class="block text-sm font-medium mb-1">Confirm password</label>
++          <input
++            v-model="confirmPassword"
++            type="password"
++            required
++            minlength="8"
++            class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
++          />
++        </div>
++
++        <p v-if="errorMessage" class="flex items-start gap-2 text-sm text-red-600">
++          <AlertTriangle class="w-4 h-4 mt-0.5 flex-shrink-0" />
++          {{ errorMessage }}
++        </p>
++
++        <button
++          type="submit"
++          :disabled="isSubmitting"
++          class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition disabled:opacity-60"
++        >
++          <Loader2 v-if="isSubmitting" class="w-4 h-4 animate-spin" />
++          Set password &amp; continue
++        </button>
++      </form>
++    </div>
++  </div>
++</template>
 diff --git a/customer/src/router/index.js b/customer/src/router/index.js
 index 9900bbe..bda058c 100644
 --- a/customer/src/router/index.js
@@ -909,3 +1240,245 @@ index 73a843a..0000000
 -    "vite": "^8.2.2"
 -  }
 -}
+diff --git a/supabase/config.toml b/supabase/config.toml
+index 4ccf5a4..502f5d7 100644
+--- a/supabase/config.toml
++++ b/supabase/config.toml
+@@ -8,6 +8,9 @@
+ [functions.create-order]
+ verify_jwt = true
+ 
++[functions.invite-admin]
++verify_jwt = true
++
+ [functions.sslcommerz-ipn]
+ verify_jwt = false
+ 
+diff --git a/supabase/functions/invite-admin/index.ts b/supabase/functions/invite-admin/index.ts
+new file mode 100644
+index 0000000..496a015
+--- /dev/null
++++ b/supabase/functions/invite-admin/index.ts
+@@ -0,0 +1,179 @@
++// supabase/functions/invite-admin/index.ts
++//
++// Lets an existing admin grant admin access to someone else, from
++// inside the admin app — no SQL Editor required after the very first
++// admin account (which is still bootstrapped manually, on purpose;
++// see README).
++//
++// Trust boundary:
++//   - The caller's JWT is checked against profiles.role themselves,
++//     server-side, before anything else happens. A non-admin (or an
++//     unauthenticated request) is rejected outright.
++//   - The client only ever sends an email address. It never sends a
++//     role, a user id, or anything else that could be tampered with
++//     to grant more than "make this email an admin".
++//
++// Two paths, depending on whether the email already has an account:
++//   - New email  -> Supabase Auth creates the user and emails them an
++//                    invite link (to set a password). Their profile is
++//                    promoted to 'admin' immediately, so by the time
++//                    they finish the invite link they already have
++//                    admin access.
++//   - Existing email -> no email needed, just flips role -> 'admin'
++//                    directly (they already have a login).
++// Every grant is written to admin_invites for a visible audit trail.
++
++import { createClient } from 'jsr:@supabase/supabase-js@2'
++import { corsHeaders, handleOptions } from '../_shared/cors.ts'
++
++Deno.serve(async (req) => {
++  const preflight = handleOptions(req)
++  if (preflight) return preflight
++
++  try {
++    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
++    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
++    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
++
++    // --------------------------------------------------
++    // 1. Identify the caller and confirm they're already an admin.
++    //    Same pattern as create-order: decode the caller's own JWT
++    //    with the anon-key client (does not bypass RLS on its own).
++    // --------------------------------------------------
++    const authHeader = req.headers.get('Authorization')
++    if (!authHeader) {
++      return json({ error: 'Missing Authorization header. Please log in again.' }, 401)
++    }
++
++    const callerClient = createClient(supabaseUrl, anonKey, {
++      global: { headers: { Authorization: authHeader } },
++    })
++
++    const {
++      data: { user: caller },
++      error: callerError,
++    } = await callerClient.auth.getUser()
++
++    if (callerError || !caller) {
++      return json({ error: 'Your session has expired. Please log in again.' }, 401)
++    }
++
++    const { data: callerProfile } = await callerClient
++      .from('profiles')
++      .select('role')
++      .eq('id', caller.id)
++      .maybeSingle()
++
++    if (callerProfile?.role !== 'admin') {
++      // Deliberately generic — don't confirm/deny admin status of
++      // arbitrary accounts to a non-admin caller.
++      return json({ error: 'Not authorized.' }, 403)
++    }
++
++    // --------------------------------------------------
++    // 2. Parse + validate the request body.
++    // --------------------------------------------------
++    const body = await req.json()
++    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
++
++    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
++    if (!email || !emailPattern.test(email)) {
++      return json({ error: 'Please enter a valid email address.' }, 400)
++    }
++
++    // --------------------------------------------------
++    // 3. Service-role client — only this function has this key.
++    // --------------------------------------------------
++    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
++      auth: { autoRefreshToken: false, persistSession: false },
++    })
++
++    const { data: existingProfile } = await adminClient
++      .from('profiles')
++      .select('id, role')
++      .eq('email', email)
++      .maybeSingle()
++
++    // --------------------------------------------------
++    // 4a. Existing account -> just flip their role. No email needed,
++    //     they already have a working login.
++    // --------------------------------------------------
++    if (existingProfile) {
++      if (existingProfile.role === 'admin') {
++        return json({ error: `${email} is already an admin.` }, 400)
++      }
++
++      const { error: updateError } = await adminClient
++        .from('profiles')
++        .update({ role: 'admin' })
++        .eq('id', existingProfile.id)
++
++      if (updateError) {
++        return json({ error: 'Could not update that account. Please try again.' }, 500)
++      }
++
++      await adminClient.from('admin_invites').insert({
++        email,
++        invited_by: caller.id,
++        invited_user_id: existingProfile.id,
++        kind: 'promoted',
++      })
++
++      return json({ status: 'promoted', message: `${email} now has admin access.` })
++    }
++
++    // --------------------------------------------------
++    // 4b. Brand-new email -> create the account via Supabase Auth's
++    //     invite flow (sends them a "set your password" email), then
++    //     immediately promote the profile the handle_new_user trigger
++    //     creates for it.
++    // --------------------------------------------------
++    const adminSiteUrl = req.headers.get('origin') || Deno.env.get('ADMIN_SITE_URL') || ''
++
++    const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
++      redirectTo: adminSiteUrl ? `${adminSiteUrl}/set-password` : undefined,
++    })
++
++    if (inviteError || !inviteData?.user) {
++      return json({ error: inviteError?.message || 'Could not send the invite. Please try again.' }, 502)
++    }
++
++    const newUserId = inviteData.user.id
++
++    // handle_new_user (trigger on auth.users) already created a
++    // 'customer' profile row for this id by this point — promote it.
++    const { error: promoteError } = await adminClient
++      .from('profiles')
++      .update({ role: 'admin' })
++      .eq('id', newUserId)
++
++    if (promoteError) {
++      return json(
++        {
++          error:
++            'Invite email was sent, but promoting the new account failed. Please try promoting them again once they accept the invite.',
++        },
++        500,
++      )
++    }
++
++    await adminClient.from('admin_invites').insert({
++      email,
++      invited_by: caller.id,
++      invited_user_id: newUserId,
++      kind: 'invited',
++    })
++
++    return json({ status: 'invited', message: `Invite sent to ${email}.` })
++  } catch (err) {
++    console.error('invite-admin error:', err)
++    return json({ error: 'Something went wrong sending the invite. Please try again.' }, 500)
++  }
++})
++
++function json(payload: unknown, status = 200) {
++  return new Response(JSON.stringify(payload), {
++    status,
++    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
++  })
++}
+diff --git a/supabase/migrations/0007_admin_invites.sql b/supabase/migrations/0007_admin_invites.sql
+new file mode 100644
+index 0000000..caae042
+--- /dev/null
++++ b/supabase/migrations/0007_admin_invites.sql
+@@ -0,0 +1,37 @@
++-- =====================================================================
++-- VueShop — admin invites (audit trail for granting admin access)
++-- =====================================================================
++-- This table does NOT gate anything by itself — it's a record of who
++-- invited/promoted whom and when. The actual privilege is (as always)
++-- the `role` column on public.profiles, and the only code path that
++-- ever writes 'admin' into it is the invite-admin Edge Function,
++-- running as service role, after independently verifying the caller
++-- is already an admin.
++-- =====================================================================
++
++create table public.admin_invites (
++  id uuid primary key default gen_random_uuid(),
++  email text not null,
++  invited_by uuid not null references public.profiles (id),
++  invited_user_id uuid references public.profiles (id) on delete set null,
++  -- 'invited'  — brand-new account created via Supabase invite email,
++  --              not yet accepted (no password set / link not used yet).
++  -- 'promoted' — an existing account was promoted directly (no email
++  --              round-trip needed, since they already have a login).
++  kind text not null check (kind in ('invited', 'promoted')),
++  created_at timestamptz not null default now()
++);
++
++create index admin_invites_email_idx on public.admin_invites (email);
++
++alter table public.admin_invites enable row level security;
++
++-- Only admins can ever read the invite log.
++create policy "admin_invites_select_admin"
++  on public.admin_invites for select
++  using (public.is_admin());
++
++-- No insert/update/delete policies for regular clients on purpose:
++-- rows are written only by the invite-admin Edge Function using the
++-- service role key, which bypasses RLS entirely. A customer or even
++-- a compromised admin session can't write here directly.
