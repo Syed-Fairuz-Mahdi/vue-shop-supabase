@@ -407,10 +407,10 @@ const submitReview = async () => {
         <!-- Price -->
 
         <div class="flex items-center gap-4 mt-8">
-          <span class="text-4xl font-bold text-blue-600"> ${{ product.price }} </span>
+          <span class="text-4xl font-bold text-blue-600"> ৳{{ product.price }} </span>
 
           <span v-if="product.originalPrice" class="text-xl text-gray-400 line-through">
-            ${{ product.originalPrice }}
+            ৳{{ product.originalPrice }}
           </span>
 
           <span v-if="discountPercentage > 0" class="text-green-600 font-semibold">
@@ -522,7 +522,7 @@ const submitReview = async () => {
             <div>
               <p class="font-semibold">Free Shipping</p>
 
-              <p class="text-sm text-gray-500">On orders over $50</p>
+              <p class="text-sm text-gray-500">On orders over ৳50</p>
             </div>
           </div>
 
@@ -711,7 +711,7 @@ const submitReview = async () => {
               <span v-else class="text-gray-400 text-sm">No ratings</span>
             </div>
 
-            <p class="text-xl font-bold text-blue-600 mt-3">${{ relatedProduct.price }}</p>
+            <p class="text-xl font-bold text-blue-600 mt-3">৳{{ relatedProduct.price }}</p>
 
             <RouterLink
               :to="`/product/${relatedProduct.id}`"

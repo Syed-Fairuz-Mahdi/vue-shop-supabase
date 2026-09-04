@@ -318,14 +318,14 @@ const orderNumber = computed(() => {
               </p>
 
               <p class="text-blue-600 font-semibold mt-2">
-                ${{ item.price.toFixed(2) }}
+                ৳{{ item.price.toFixed(2) }}
                 each
               </p>
             </div>
 
             <!-- Total -->
 
-            <div class="font-bold text-lg">${{ (item.price * item.quantity).toFixed(2) }}</div>
+            <div class="font-bold text-lg">৳{{ (item.price * item.quantity).toFixed(2) }}</div>
           </div>
         </div>
       </div>
@@ -343,7 +343,7 @@ const orderNumber = computed(() => {
           <div class="flex justify-between">
             <span class="text-gray-600"> Subtotal </span>
 
-            <span> ${{ order.subtotal.toFixed(2) }} </span>
+            <span> ৳{{ order.subtotal.toFixed(2) }} </span>
           </div>
 
           <!-- Shipping -->
@@ -352,7 +352,7 @@ const orderNumber = computed(() => {
             <span class="text-gray-600"> Shipping </span>
 
             <span :class="order.shipping === 0 ? 'text-green-600' : ''">
-              {{ order.shipping === 0 ? 'Free' : `$${order.shipping.toFixed(2)}` }}
+              {{ order.shipping === 0 ? 'Free' : `৳${order.shipping.toFixed(2)}` }}
             </span>
           </div>
 
@@ -363,7 +363,7 @@ const orderNumber = computed(() => {
           <div class="flex justify-between items-center">
             <span class="text-2xl font-bold"> Total </span>
 
-            <span class="text-3xl font-bold text-blue-600"> ${{ order.total.toFixed(2) }} </span>
+            <span class="text-3xl font-bold text-blue-600"> ৳{{ order.total.toFixed(2) }} </span>
           </div>
         </div>
       </div>

@@ -462,7 +462,7 @@ const placeOrder = async () => {
                 <p class="text-sm text-gray-500">Qty: {{ item.quantity }}</p>
               </div>
 
-              <span class="font-semibold"> ${{ (item.price * item.quantity).toFixed(2) }} </span>
+              <span class="font-semibold"> ৳{{ (item.price * item.quantity).toFixed(2) }} </span>
             </div>
           </div>
 
@@ -471,14 +471,14 @@ const placeOrder = async () => {
           <div class="flex justify-between">
             <span class="text-gray-600"> Subtotal </span>
 
-            <span> ${{ cartStore.totalPrice.toFixed(2) }} </span>
+            <span> ৳{{ cartStore.totalPrice.toFixed(2) }} </span>
           </div>
 
           <div class="flex justify-between mt-4">
             <span class="text-gray-600"> Shipping </span>
 
             <span :class="shipping === 0 ? 'text-green-600' : ''">
-              {{ shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}` }}
+              {{ shipping === 0 ? 'Free' : `৳${shipping.toFixed(2)}` }}
             </span>
           </div>
 
@@ -487,7 +487,7 @@ const placeOrder = async () => {
           <div class="flex justify-between items-center">
             <span class="text-xl font-bold"> Total </span>
 
-            <span class="text-2xl font-bold text-blue-600"> ${{ total.toFixed(2) }} </span>
+            <span class="text-2xl font-bold text-blue-600"> ৳{{ total.toFixed(2) }} </span>
           </div>
 
           <!-- Error -->

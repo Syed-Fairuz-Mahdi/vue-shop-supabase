@@ -27,7 +27,7 @@ const shipping = computed(() => {
     return 0
   }
 
-  // Free shipping for orders of $50 or more
+  // Free shipping for orders of ৳50 or more
   if (cartStore.totalPrice >= 50) {
     return 0
   }
@@ -188,10 +188,10 @@ const clearCart = () => {
               <!-- Price -->
 
               <div class="flex items-center gap-3 mt-3">
-                <p class="text-blue-600 font-bold text-xl">${{ Number(item.price).toFixed(2) }}</p>
+                <p class="text-blue-600 font-bold text-xl">৳{{ Number(item.price).toFixed(2) }}</p>
 
                 <p v-if="item.originalPrice" class="text-gray-400 line-through">
-                  ${{ Number(item.originalPrice).toFixed(2) }}
+                  ৳{{ Number(item.originalPrice).toFixed(2) }}
                 </p>
               </div>
 
@@ -248,7 +248,7 @@ const clearCart = () => {
                 Item total:
 
                 <span class="font-semibold text-gray-900">
-                  ${{ (item.price * item.quantity).toFixed(2) }}
+                  ৳{{ (item.price * item.quantity).toFixed(2) }}
                 </span>
               </p>
             </div>
@@ -271,7 +271,7 @@ const clearCart = () => {
           <div class="flex justify-between mt-8">
             <span class="text-gray-600"> Subtotal </span>
 
-            <span class="font-medium"> ${{ cartStore.totalPrice.toFixed(2) }} </span>
+            <span class="font-medium"> ৳{{ cartStore.totalPrice.toFixed(2) }} </span>
           </div>
 
           <!-- =========================================== -->
@@ -281,7 +281,7 @@ const clearCart = () => {
           <div v-if="totalSavings > 0" class="flex justify-between mt-4">
             <span class="text-gray-600"> You save </span>
 
-            <span class="text-green-600 font-medium"> -${{ totalSavings.toFixed(2) }} </span>
+            <span class="text-green-600 font-medium"> -৳{{ totalSavings.toFixed(2) }} </span>
           </div>
 
           <!-- =========================================== -->
@@ -293,7 +293,7 @@ const clearCart = () => {
 
             <span v-if="shipping === 0" class="text-green-600 font-medium"> Free </span>
 
-            <span v-else class="font-medium"> ${{ shipping.toFixed(2) }} </span>
+            <span v-else class="font-medium"> ৳{{ shipping.toFixed(2) }} </span>
           </div>
 
           <!-- Free shipping message -->
@@ -302,7 +302,7 @@ const clearCart = () => {
             v-if="shipping > 0 && cartStore.totalPrice < 50"
             class="mt-4 bg-blue-50 text-blue-700 text-sm p-3 rounded-lg"
           >
-            Add ${{ (50 - cartStore.totalPrice).toFixed(2) }}
+            Add ৳{{ (50 - cartStore.totalPrice).toFixed(2) }}
             more for free shipping.
           </div>
 
@@ -317,7 +317,7 @@ const clearCart = () => {
           <div class="flex justify-between items-center">
             <span class="text-xl font-bold"> Total </span>
 
-            <span class="text-2xl font-bold text-blue-600"> ${{ grandTotal.toFixed(2) }} </span>
+            <span class="text-2xl font-bold text-blue-600"> ৳{{ grandTotal.toFixed(2) }} </span>
           </div>
 
           <!-- =========================================== -->
@@ -352,7 +352,7 @@ const clearCart = () => {
             <div class="flex items-center gap-3">
               <Truck class="w-5 h-5 text-gray-500" />
 
-              <span class="text-sm text-gray-600"> Free shipping over $50 </span>
+              <span class="text-sm text-gray-600"> Free shipping over ৳50 </span>
             </div>
 
             <div class="flex items-center gap-3">

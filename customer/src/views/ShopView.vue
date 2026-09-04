@@ -535,11 +535,11 @@ const closeFilters = () => {
           </span>
 
           <span v-if="minPrice" class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
-            Min: ${{ minPrice }}
+            Min: ৳{{ minPrice }}
           </span>
 
           <span v-if="maxPrice" class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
-            Max: ${{ maxPrice }}
+            Max: ৳{{ maxPrice }}
           </span>
 
           <span

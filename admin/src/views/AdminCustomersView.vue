@@ -83,7 +83,7 @@ const filteredCustomers = computed(() => {
               <td class="px-5 py-4 font-medium">{{ customer.full_name || '—' }}</td>
               <td class="px-5 py-4 text-gray-600">{{ customer.email }}</td>
               <td class="px-5 py-4">{{ customer.orderCount }}</td>
-              <td class="px-5 py-4 font-semibold">${{ customer.totalSpent.toFixed(2) }}</td>
+              <td class="px-5 py-4 font-semibold">৳{{ customer.totalSpent.toFixed(2) }}</td>
               <td class="px-5 py-4 text-gray-500 text-sm">
                 {{ new Date(customer.created_at).toLocaleDateString() }}
               </td>

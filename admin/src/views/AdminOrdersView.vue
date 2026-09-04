@@ -128,7 +128,7 @@ const paymentBadgeClass = (order) => {
                   <p class="text-xs text-gray-400">{{ order.shipping_email }}</p>
                 </td>
 
-                <td class="px-5 py-4 font-semibold">${{ Number(order.total).toFixed(2) }}</td>
+                <td class="px-5 py-4 font-semibold">৳{{ Number(order.total).toFixed(2) }}</td>
 
                 <td class="px-5 py-4">
                   <span class="text-xs font-semibold px-2 py-1 rounded-full" :class="paymentBadgeClass(order)">
@@ -176,7 +176,7 @@ const paymentBadgeClass = (order) => {
                       <p class="text-sm font-semibold text-gray-500 mb-2">Items</p>
                       <div v-for="item in order.order_items" :key="item.id" class="flex justify-between text-sm py-1">
                         <span>{{ item.title }} × {{ item.quantity }}</span>
-                        <span class="font-medium">${{ Number(item.line_total).toFixed(2) }}</span>
+                        <span class="font-medium">৳{{ Number(item.line_total).toFixed(2) }}</span>
                       </div>
                     </div>
                   </div>

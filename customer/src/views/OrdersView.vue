@@ -106,7 +106,7 @@ onMounted(async () => {
           <div>
             <p class="text-sm text-gray-500">Total</p>
 
-            <p class="font-bold text-lg">${{ Number(order.total).toFixed(2) }}</p>
+            <p class="font-bold text-lg">৳{{ Number(order.total).toFixed(2) }}</p>
           </div>
         </div>
 
@@ -131,7 +131,7 @@ onMounted(async () => {
               </p>
 
               <p class="text-blue-600 font-semibold mt-2">
-                ${{ Number(item.line_total).toFixed(2) }}
+                ৳{{ Number(item.line_total).toFixed(2) }}
               </p>
             </div>
           </div>

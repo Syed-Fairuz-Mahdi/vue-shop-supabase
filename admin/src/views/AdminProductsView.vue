@@ -103,9 +103,9 @@ const confirmDelete = async (id) => {
               <td class="px-5 py-4 text-gray-600">{{ product.category }}</td>
 
               <td class="px-5 py-4">
-                <span class="font-semibold">${{ product.price }}</span>
+                <span class="font-semibold">৳{{ product.price }}</span>
                 <span v-if="product.originalPrice" class="text-gray-400 line-through text-sm ml-2">
-                  ${{ product.originalPrice }}
+                  ৳{{ product.originalPrice }}
                 </span>
               </td>
 

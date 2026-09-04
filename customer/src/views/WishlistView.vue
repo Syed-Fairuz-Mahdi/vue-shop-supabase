@@ -111,9 +111,9 @@ const moveToCart = (item) => {
           <!-- Price -->
 
           <div class="flex items-center gap-3 mt-4">
-            <span class="text-xl font-bold text-blue-600"> ${{ item.price }} </span>
+            <span class="text-xl font-bold text-blue-600"> ৳{{ item.price }} </span>
 
-            <span class="text-gray-400 line-through"> ${{ item.originalPrice }} </span>
+            <span class="text-gray-400 line-through"> ৳{{ item.originalPrice }} </span>
           </div>
 
           <!-- Move to cart -->

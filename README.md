@@ -100,6 +100,19 @@ supabase secrets set SSLCOMMERZ_IS_SANDBOX=true
 supabase secrets set CUSTOMER_SITE_URL=https://www.yourdomain.com
 ```
 
+`CUSTOMER_SITE_URL` is also the **allowlist** for where a customer's
+browser is allowed to be redirected back to after paying — it's not
+just a fallback. It's checked against the request's actual origin, so
+a request pretending to come from some other domain can never hijack
+the post-payment redirect. If you need more than one valid storefront
+origin (e.g. your production domain and a Vercel preview URL, or
+`http://localhost:5173` during local testing), separate them with
+commas — no spaces needed either way:
+
+```
+supabase secrets set CUSTOMER_SITE_URL=https://www.yourdomain.com,https://vue-shop-supabase.vercel.app
+```
+
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are already available to
 Edge Functions automatically — you don't set those yourself, and they
 never appear in either frontend's code or bundle.

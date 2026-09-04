@@ -23,7 +23,18 @@ Deno.serve(async (req) => {
 
   const url = new URL(req.url)
   const status = url.searchParams.get('status') // success | fail | cancel
-  const siteOrigin = url.searchParams.get('site') || Deno.env.get('CUSTOMER_SITE_URL') || ''
+
+  // SECURITY: `site` was set by create-order, but this URL is also
+  // reachable directly (anyone can hit it with any query string), so
+  // it's re-validated here too, not just trusted because it came from
+  // "our own" link. Only a value matching a known, configured
+  // storefront origin is ever used as a redirect target.
+  const requestedSite = url.searchParams.get('site') || ''
+  const allowedOrigins = (Deno.env.get('CUSTOMER_SITE_URL') || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean)
+  const siteOrigin = allowedOrigins.includes(requestedSite) ? requestedSite : allowedOrigins[0] || ''
 
   try {
     const form = await req.formData().catch(() => null)

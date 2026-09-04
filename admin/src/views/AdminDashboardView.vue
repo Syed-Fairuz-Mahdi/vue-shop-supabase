@@ -62,7 +62,7 @@ const stats = computed(() => [
   { label: 'Products', value: totalProducts.value, icon: Package, color: 'bg-blue-100 text-blue-600' },
   { label: 'Categories', value: totalCategories.value, icon: Tags, color: 'bg-purple-100 text-purple-600' },
   { label: 'Orders', value: orders.value.length, icon: ShoppingBag, color: 'bg-indigo-100 text-indigo-600' },
-  { label: 'Paid Revenue', value: `$${paidRevenue.value}`, icon: DollarSign, color: 'bg-green-100 text-green-600' },
+  { label: 'Paid Revenue', value: `৳${paidRevenue.value}`, icon: DollarSign, color: 'bg-green-100 text-green-600' },
 ])
 </script>
 
@@ -161,7 +161,7 @@ const stats = computed(() => [
 
         <div class="flex items-center gap-3 mt-4">
           <DollarSign class="w-8 h-8 text-green-600" />
-          <span class="text-4xl font-bold">${{ inventoryValue }}</span>
+          <span class="text-4xl font-bold">৳{{ inventoryValue }}</span>
         </div>
 
         <p class="text-gray-500 mt-3 text-sm">Total value of current stock at listed prices.</p>

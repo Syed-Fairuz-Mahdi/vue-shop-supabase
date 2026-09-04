@@ -113,7 +113,21 @@ Deno.serve(async (req) => {
     // --------------------------------------------------
     // 5. Online payment — start an SSLCommerz session.
     // --------------------------------------------------
-    const siteOrigin = req.headers.get('origin') || Deno.env.get('CUSTOMER_SITE_URL') || ''
+    // SECURITY: siteOrigin is later used to build the URL the
+    // customer's browser gets redirected to after payment. It must
+    // NEVER be trusted verbatim from the request's Origin header —
+    // an attacker could call this function directly with a forged
+    // Origin and get a legitimate payment redirected to their own
+    // domain (open redirect / phishing after a real purchase). Only
+    // an origin that exactly matches our own known, configured
+    // storefront domain(s) is accepted; anything else silently falls
+    // back to the trusted CUSTOMER_SITE_URL secret.
+    const requestOrigin = req.headers.get('origin') || ''
+    const allowedOrigins = (Deno.env.get('CUSTOMER_SITE_URL') || '')
+      .split(',')
+      .map((o) => o.trim())
+      .filter(Boolean)
+    const siteOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0] || ''
     const functionsBase = `${supabaseUrl}/functions/v1`
 
     try {

@@ -100,10 +100,10 @@ const isWishlisted = () => {
 
       <!-- Price -->
       <div class="flex items-center gap-3 mt-4">
-        <span class="text-2xl font-bold text-blue-600"> ${{ product.price }} </span>
+        <span class="text-2xl font-bold text-blue-600"> ৳{{ product.price }} </span>
 
         <span v-if="product.originalPrice" class="line-through text-gray-400">
-          ${{ product.originalPrice }}
+          ৳{{ product.originalPrice }}
         </span>
       </div>
 
