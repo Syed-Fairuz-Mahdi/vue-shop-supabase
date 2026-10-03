@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, reactive, ref, watch, computed } from 'vue'
-import { Save, RotateCcw, Upload, Loader2, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-vue-next'
+import { Save, RotateCcw, Upload, Loader2, ArrowUp, ArrowDown, Eye, EyeOff, Plus, Trash2 } from 'lucide-vue-next'
 
 import { useSettingsStore } from '@/stores/settings'
 import { uploadImage } from '@/lib/storage'
@@ -10,7 +10,11 @@ import {
   HERO_SIZE_OPTIONS,
   HERO_IMAGE_SIZE_OPTIONS,
   HERO_GRADIENT_ANGLE_OPTIONS,
+  WHY_CHOOSE_US_ICON_OPTIONS,
+  DEFAULT_WHY_CHOOSE_US_HEADING,
+  DEFAULT_WHY_CHOOSE_US_SUBTITLE,
   cloneDefaultHomeSections,
+  cloneDefaultWhyChooseUsFeatures,
 } from '@/lib/design'
 
 const settingsStore = useSettingsStore()
@@ -29,6 +33,9 @@ const form = reactive({
   heroPaddingY: 'lg',
   heroImageSize: 'lg',
   homeSections: cloneDefaultHomeSections(),
+  whyChooseUsHeading: DEFAULT_WHY_CHOOSE_US_HEADING,
+  whyChooseUsSubtitle: DEFAULT_WHY_CHOOSE_US_SUBTITLE,
+  whyChooseUsFeatures: cloneDefaultWhyChooseUsFeatures(),
 })
 
 const flashSaleEndsAtLocal = ref('')
@@ -61,6 +68,12 @@ const applyStoreValues = (settings) => {
     Array.isArray(settings.homeSections) && settings.homeSections.length > 0
       ? settings.homeSections.map((section) => ({ ...section }))
       : cloneDefaultHomeSections()
+  form.whyChooseUsHeading = settings.whyChooseUsHeading || DEFAULT_WHY_CHOOSE_US_HEADING
+  form.whyChooseUsSubtitle = settings.whyChooseUsSubtitle ?? DEFAULT_WHY_CHOOSE_US_SUBTITLE
+  form.whyChooseUsFeatures =
+    Array.isArray(settings.whyChooseUsFeatures) && settings.whyChooseUsFeatures.length > 0
+      ? settings.whyChooseUsFeatures.map((feature) => ({ ...feature }))
+      : cloneDefaultWhyChooseUsFeatures()
   flashSaleEndsAtLocal.value = isoToLocalInput(settings.flashSaleEndsAt)
 }
 
@@ -111,6 +124,37 @@ const toggleSectionVisibility = (index) => {
 
 const resetSectionsToDefault = () => {
   form.homeSections = cloneDefaultHomeSections()
+}
+
+// --------------------------------------------------
+// "Why Choose Us" trust badges (add / edit / remove / reorder)
+// --------------------------------------------------
+
+const addWhyChooseUsFeature = () => {
+  form.whyChooseUsFeatures.push({
+    id: crypto.randomUUID(),
+    icon: 'Star',
+    title: 'New Feature',
+    description: '',
+  })
+}
+
+const removeWhyChooseUsFeature = (index) => {
+  form.whyChooseUsFeatures.splice(index, 1)
+}
+
+const moveWhyChooseUsFeature = (index, direction) => {
+  const target = index + direction
+  if (target < 0 || target >= form.whyChooseUsFeatures.length) return
+
+  const features = form.whyChooseUsFeatures
+  ;[features[index], features[target]] = [features[target], features[index]]
+}
+
+const resetWhyChooseUsFeaturesToDefault = () => {
+  form.whyChooseUsHeading = DEFAULT_WHY_CHOOSE_US_HEADING
+  form.whyChooseUsSubtitle = DEFAULT_WHY_CHOOSE_US_SUBTITLE
+  form.whyChooseUsFeatures = cloneDefaultWhyChooseUsFeatures()
 }
 
 // --------------------------------------------------
@@ -372,6 +416,95 @@ const discardChanges = async () => {
             </button>
           </div>
         </div>
+      </section>
+
+      <!-- Why Choose Us -->
+      <section class="bg-white rounded-2xl shadow-md p-8 space-y-5">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h2 class="text-xl font-bold">Why Choose Us</h2>
+            <p class="text-sm text-gray-500 mt-1">The trust badges shown on the homepage (shipping, payment, returns, support, etc).</p>
+          </div>
+
+          <button type="button" @click="resetWhyChooseUsFeaturesToDefault" class="text-sm text-blue-600 hover:underline shrink-0">
+            Reset to default
+          </button>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-2">Section Heading</label>
+            <input v-model="form.whyChooseUsHeading" type="text"
+              class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2">Section Subtitle</label>
+            <input v-model="form.whyChooseUsSubtitle" type="text"
+              class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div
+            v-for="(feature, index) in form.whyChooseUsFeatures"
+            :key="feature.id"
+            class="border border-gray-200 rounded-xl p-4 space-y-3"
+          >
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-sm font-medium text-gray-500">Feature {{ index + 1 }}</span>
+
+              <div class="flex items-center gap-1">
+                <button type="button" @click="moveWhyChooseUsFeature(index, -1)" :disabled="index === 0"
+                  class="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30" title="Move up">
+                  <ArrowUp class="w-4 h-4" />
+                </button>
+                <button type="button" @click="moveWhyChooseUsFeature(index, 1)"
+                  :disabled="index === form.whyChooseUsFeatures.length - 1"
+                  class="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30" title="Move down">
+                  <ArrowDown class="w-4 h-4" />
+                </button>
+                <button type="button" @click="removeWhyChooseUsFeature(index)"
+                  class="p-2 rounded-lg hover:bg-red-50 text-red-600" title="Remove feature">
+                  <Trash2 class="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div class="grid sm:grid-cols-[140px_1fr] gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Icon</label>
+                <select v-model="feature.icon"
+                  class="w-full border border-gray-300 rounded-lg px-3 py-3 outline-none focus:ring-2 focus:ring-blue-500">
+                  <option v-for="option in WHY_CHOOSE_US_ICON_OPTIONS" :key="option.id" :value="option.id">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Title</label>
+                <input v-model="feature.title" type="text" placeholder="e.g. Free Shipping"
+                  class="w-full border border-gray-300 rounded-lg px-3 py-3 outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Description</label>
+              <input v-model="feature.description" type="text" placeholder="e.g. Free shipping on orders over ৳50."
+                class="w-full border border-gray-300 rounded-lg px-3 py-3 outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+
+          <p v-if="form.whyChooseUsFeatures.length === 0" class="text-sm text-gray-400 italic">
+            No features yet — the section will be hidden on the storefront until you add one.
+          </p>
+        </div>
+
+        <button type="button" @click="addWhyChooseUsFeature"
+          class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50">
+          <Plus class="w-4 h-4" />
+          Add Feature
+        </button>
       </section>
 
       <!-- Flash sale -->

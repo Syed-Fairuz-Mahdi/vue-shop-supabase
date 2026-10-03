@@ -2,7 +2,12 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { supabase } from '@/lib/supabase'
-import { cloneDefaultHomeSections } from '@/lib/design'
+import {
+  cloneDefaultHomeSections,
+  cloneDefaultWhyChooseUsFeatures,
+  DEFAULT_WHY_CHOOSE_US_HEADING,
+  DEFAULT_WHY_CHOOSE_US_SUBTITLE,
+} from '@/lib/design'
 
 const fallbackSettings = {
   siteName: 'VueShop',
@@ -26,6 +31,9 @@ const fallbackSettings = {
   heroImageSize: 'lg',
   homeSections: cloneDefaultHomeSections(),
   flashSaleEndsAt: '',
+  whyChooseUsHeading: DEFAULT_WHY_CHOOSE_US_HEADING,
+  whyChooseUsSubtitle: DEFAULT_WHY_CHOOSE_US_SUBTITLE,
+  whyChooseUsFeatures: cloneDefaultWhyChooseUsFeatures(),
   footerAbout: 'Your one-stop destination for premium shopping.',
   footerCopyright: '© 2026 VueShop. All rights reserved.',
   footerCompanyLinks: ['About', 'Contact', 'Careers'],

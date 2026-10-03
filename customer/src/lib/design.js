@@ -5,6 +5,29 @@
 // Admin > Design, and applied live on the storefront (App.vue, Hero).
 // --------------------------------------------------------------
 
+import {
+  Truck,
+  ShieldCheck,
+  RotateCcw,
+  Headset,
+  CreditCard,
+  Gift,
+  Clock,
+  Star,
+  Award,
+  ThumbsUp,
+  Lock,
+  PackageCheck,
+  Percent,
+  Heart,
+  Globe,
+  Phone,
+  BadgeCheck,
+  HandCoins,
+  Sparkles,
+  Wallet,
+} from 'lucide-vue-next'
+
 export const FONT_OPTIONS = [
   {
     id: 'inter',
@@ -90,6 +113,58 @@ export const DEFAULT_HOME_SECTIONS = [
 ]
 
 export const cloneDefaultHomeSections = () => DEFAULT_HOME_SECTIONS.map((section) => ({ ...section }))
+
+// --------------------------------------------------------------
+// "Why Choose Us" trust badges (homepage) — editable from
+// Admin > Design. Icons are stored as string ids (below) so they
+// survive JSON storage in settings.data; components are resolved
+// on render via getWhyChooseUsIcon().
+// --------------------------------------------------------------
+
+export const WHY_CHOOSE_US_ICON_OPTIONS = [
+  { id: 'Truck', label: 'Truck', component: Truck },
+  { id: 'ShieldCheck', label: 'Shield Check', component: ShieldCheck },
+  { id: 'RotateCcw', label: 'Rotate / Returns', component: RotateCcw },
+  { id: 'Headset', label: 'Headset / Support', component: Headset },
+  { id: 'CreditCard', label: 'Credit Card', component: CreditCard },
+  { id: 'Gift', label: 'Gift', component: Gift },
+  { id: 'Clock', label: 'Clock', component: Clock },
+  { id: 'Star', label: 'Star', component: Star },
+  { id: 'Award', label: 'Award', component: Award },
+  { id: 'ThumbsUp', label: 'Thumbs Up', component: ThumbsUp },
+  { id: 'Lock', label: 'Lock', component: Lock },
+  { id: 'PackageCheck', label: 'Package Check', component: PackageCheck },
+  { id: 'Percent', label: 'Percent / Discount', component: Percent },
+  { id: 'Heart', label: 'Heart', component: Heart },
+  { id: 'Globe', label: 'Globe', component: Globe },
+  { id: 'Phone', label: 'Phone', component: Phone },
+  { id: 'BadgeCheck', label: 'Badge Check', component: BadgeCheck },
+  { id: 'HandCoins', label: 'Hand Coins', component: HandCoins },
+  { id: 'Sparkles', label: 'Sparkles', component: Sparkles },
+  { id: 'Wallet', label: 'Wallet', component: Wallet },
+]
+
+export const getWhyChooseUsIcon = (id) =>
+  WHY_CHOOSE_US_ICON_OPTIONS.find((option) => option.id === id)?.component || Truck
+
+export const DEFAULT_WHY_CHOOSE_US_HEADING = 'Why Shop With Us?'
+export const DEFAULT_WHY_CHOOSE_US_SUBTITLE =
+  'We focus on quality products and an exceptional shopping experience.'
+
+export const DEFAULT_WHY_CHOOSE_US_FEATURES = [
+  { id: 'shipping', icon: 'Truck', title: 'Free Shipping', description: 'Free shipping on orders over ৳50.' },
+  {
+    id: 'payment',
+    icon: 'ShieldCheck',
+    title: 'Secure Payment',
+    description: 'Your payments are protected with industry-standard encryption.',
+  },
+  { id: 'returns', icon: 'RotateCcw', title: 'Easy Returns', description: 'Return products within 30 days with no hassle.' },
+  { id: 'support', icon: 'Headset', title: '24/7 Support', description: 'Our support team is here whenever you need help.' },
+]
+
+export const cloneDefaultWhyChooseUsFeatures = () =>
+  DEFAULT_WHY_CHOOSE_US_FEATURES.map((feature) => ({ ...feature }))
 
 const GOOGLE_FONT_LINK_ID = 'app-google-font'
 
